@@ -13,40 +13,147 @@ import {
   TouchableHighlight,
   ScrollView,
   TouchableHighlightBase,
+  TimePickerAndroid,
 } from "react-native";
-import bg from "../../assets/bg.jpg";
+import { AsyncStorage } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 export default class WelcomeScreen extends Component {
+  async saveshit(shit) {
+    try {
+      await AsyncStorage.setItem("@BreakManager:test1", shit);
+      console.log(shit);
+    } catch (error) {
+      // Error saving data
+      console.log(error);
+    }
+  }
+  async removeshit(shit) {
+    try {
+      await AsyncStorage.removeItem("@BreakManager:test1");
+      console.log("deleted");
+    } catch (error) {
+      // Error saving data
+      console.log(error);
+    }
+  }
+  async componentDidMount() {
+    try {
+      const value = await AsyncStorage.getItem("@BreakManager:test1");
+      if (value !== null) this.setState({ data: JSON.parse(value), pick: 0 });
+      this.dtps = null;
+    } catch (error) {
+      // Error retrieving data
+      console.log(error);
+    }
+  }
+  async getshit() {
+    if (this.state != null) console.log(this.state.data);
+  }
+  showPicker() {
+    let dtp = [
+      <DateTimePicker
+        testID="dateTimePicker"
+        value={new Date()}
+        mode={"time"}
+        is24Hour={true}
+        display="default"
+        onChange={(event, selectedDate) => this.changeThis(selectedDate, 0)}
+      />,
+      <DateTimePicker
+        testID="dateTimePicker"
+        value={new Date()}
+        mode={"time"}
+        is24Hour={true}
+        display="default"
+        onChange={(event, selectedDate) => this.changeThis(selectedDate, 1)}
+      />,
+    ];
+    this.dtps = dtp[0];
+    this.showPicker2(1);
+    this.forceUpdate();
+  }
+  showPicker2() {
+    let dtp = [
+      <DateTimePicker
+        testID="dateTimePicker"
+        value={new Date()}
+        mode={"time"}
+        is24Hour={true}
+        display="default"
+        onChange={(event, selectedDate) => this.changeThis(selectedDate, 0)}
+      />,
+      <DateTimePicker
+        testID="dateTimePicker"
+        value={new Date()}
+        mode={"time"}
+        is24Hour={true}
+        display="default"
+        onChange={(event, selectedDate) => this.changeThis(selectedDate, 1)}
+      />,
+    ];
+    this.dtps = dtp[1];
+  }
+  changeThis(date, id) {
+    if (id == 0) this.start = date;
+    if (id == 1) this.end = date;
+  }
   render() {
+    var cards = [];
+    this.start = "00:00";
+    this.end = "00:00";
+    if (this.state != null) {
+      let i = 0;
+      this.start = this.state.data.start;
+      this.end = this.state.data.end;
+      this.state.data.cards.forEach((element) => {
+        cards.push(
+          <TimeframeCard
+            key={i++}
+            title={element.title}
+            at={element.at}
+            for={element.for}
+          />
+        );
+      });
+    }
+    // let data = {
+    //   start: "16:00",
+    //   end: "21:00",
+    //   cards: [
+    //     {
+    //       at: "15:00",
+    //       for: "5",
+    //       title: "lmao",
+    //     },
+    //     {
+    //       at: "15:00",
+    //       for: "5",
+    //       title: "lmao",
+    //     },
+    //     {
+    //       at: "15:00",
+    //       for: "5",
+    //       title: "lmao",
+    //     },
+    //     {
+    //       at: "15:00",
+    //       for: "5",
+    //       title: "lmao",
+    //     },
+    //   ],
+    // };
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar style={styles.status}></StatusBar>
         <Text style={styles.greeting}>BreakManager</Text>
+        {this.dtps}
         <View>
-          <Text style={{ fontSize: 20, padding: "1%" }}>16:00 - 21:00</Text>
+          <Text style={{ fontSize: 20, padding: "1%" }}>
+            {this.start} - {this.end}
+          </Text>
         </View>
         <View style={styles.tfs}>
-          <ScrollView>
-            <TimeframeCard title="lmao" at="15:00" for="5" />
-            <TimeframeCard title="lmao" at="12:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:10" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-            <TimeframeCard title="lmao" at="16:00" for="5" />
-          </ScrollView>
+          <ScrollView>{cards}</ScrollView>
         </View>
         <View
           style={{
@@ -56,7 +163,10 @@ export default class WelcomeScreen extends Component {
             left: "50%",
           }}
         >
-          <TouchableHighlight style={{}} onPress={() => console.log("MOK")}>
+          <TouchableHighlight
+            style={{}}
+            onPress={() => this.saveshit(JSON.stringify(this.state.data))}
+          >
             <Text style={styles.btntime}>ADD A BREAK</Text>
           </TouchableHighlight>
         </View>
@@ -68,7 +178,7 @@ export default class WelcomeScreen extends Component {
             left: "10%",
           }}
         >
-          <TouchableHighlight style={{}} onPress={() => console.log("MOK")}>
+          <TouchableHighlight style={{}} onPress={this.showPicker}>
             <Text style={styles.btnadjust}>ADJUST TIME</Text>
           </TouchableHighlight>
         </View>
@@ -87,7 +197,6 @@ class TimeframeCard extends Component {
     return (
       <TouchableHighlight>
         <View style={styles.tfCard}>
-          {console.log(a + " " + b)}
           <Text style={a > b ? styles.tfTitle : styles.tfTitleDone}>
             {this.props.title} time | start at {this.props.at} for{" "}
             {this.props.for} minutes
